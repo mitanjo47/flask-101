@@ -2,7 +2,7 @@
 # pylint: disable=missing-docstring
 
 from os import abort
-from flask import Flask, render_template, jsonify, abort
+from flask import Flask, render_template, jsonify, abort, request
 app = Flask(__name__)
 
 PRODUCTS = {
@@ -17,7 +17,8 @@ API_URL = '/api/v1/'
 def hello():
     return "Hello World!"
 
-@app.route(f"{API_URL}products")
+# Get all products
+@app.route(f"{API_URL}products", methods=['GET'])
 def products_action():
     res = []
 
@@ -26,7 +27,20 @@ def products_action():
     
     return jsonify(res)
 
-@app.route(API_URL + 'products/<int:id>')
+# Save product
+@app.route(f"{API_URL}products", methods=['POST'])
+def save_product_action():
+    req = request.get_json()
+
+    data = {
+        'id': len(PRODUCTS) + 1,
+        'name': req['name']
+    }
+
+    return jsonify(data)
+
+# Get product by id
+@app.route(f"{API_URL}products/<int:id>", methods=['GET'])
 def get_product_action(id):
     r = PRODUCTS.get(id)
 
@@ -35,6 +49,33 @@ def get_product_action(id):
 
     else:
         abort(404)
+
+# Delete product
+@app.route(f"{API_URL}products/<int:id>", methods=['DELETE'])
+def delete_product_action(id):
+    if PRODUCTS.get(id) is not None:
+        return '', 204
+    else:
+        abort(404)
+
+# Update product
+@app.route(f"{API_URL}products", methods=['PUT'])
+def update_product_action():
+    req = request.get_json()
+
+    if 'id' not in req:
+        return jsonify({'error':"Clé 'id' absent"}), 422
+
+    if 'name' not in req:
+        return jsonify({'error':"Clé 'name' absent"}), 422
+
+    product_id = req['id']
+    name = req['name']
+
+    if PRODUCTS.get(product_id) is None:
+        return render_template('page_not_found.html'), 404
+
+    return '', 204
 
 @app.errorhandler(404)
 def page_not_found(error):
