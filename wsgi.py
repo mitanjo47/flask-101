@@ -24,4 +24,4 @@ def products_action():
     for p in PRODUCTS.items():
         res.append(p[1])
     
-    return jsonify(PRODUCTS)
+    return jsonify(res)
